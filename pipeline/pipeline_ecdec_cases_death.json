@@ -1,0 +1,89 @@
+{
+	"name": "pipeline_ecdec_cases_death",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy cases and death",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "GET"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_ecdc_deaths_raw_http",
+						"type": "DatasetReference",
+						"parameters": {
+							"relative_url": {
+								"value": "@variables('src_relative_url')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_ecdec_dl",
+						"type": "DatasetReference",
+						"parameters": {
+							"filename": {
+								"value": "@variables('sink_filename')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"variables": {
+			"src_relative_url": {
+				"type": "String",
+				"defaultValue": "cloudboxacademy/covid19/raw/main/ecdc_data/cases_deaths.csv"
+			},
+			"sink_filename": {
+				"type": "String",
+				"defaultValue": "ecdc_file_Cases_deaths"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-07-15T16:21:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

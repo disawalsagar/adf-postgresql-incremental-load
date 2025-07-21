@@ -1,0 +1,168 @@
+{
+	"name": "PostgresqlToADLS",
+	"properties": {
+		"activities": [
+			{
+				"name": "watermark_lu",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureTableSource",
+						"azureTableSourceQuery": "PartitionKey eq 'orders' and RowKey eq 'latest'\n",
+						"azureTableSourceIgnoreTableNotFound": false
+					},
+					"dataset": {
+						"referenceName": "watermarktable",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "CopyPostgresqlToADLS",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "watermark_lu",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzurePostgreSqlSource",
+						"query": {
+							"value": "SELECT * FROM sales.orders \nWHERE updated_at > '@{activity('watermark_lu').output.firstRow.last_updated_at}'\n",
+							"type": "Expression"
+						},
+						"partitionOption": "None",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "AzurePostgreSqlTable_DS",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DelimitedText2",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "LookupMaxUpdatedAt",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "CopyPostgresqlToADLS",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzurePostgreSqlSource",
+						"query": "SELECT MAX(updated_at) AS latest_updated_at FROM sales.orders",
+						"partitionOption": "None",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "AzurePostgreSqlTable_DS",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "UpsertWatermark",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "LookupMaxUpdatedAt",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "PATCH",
+					"headers": {
+						"x-ms-version": "2019-02-02",
+						"Content-Type": "application/json;odata=nometadata",
+						"Accept": "application/json;odata=nometadata"
+					},
+					"url": "https://source12567.table.core.windows.net/watermarktracker(PartitionKey='orders',RowKey='latest')",
+					"body": {
+						"PartitionKey": "orders",
+						"RowKey": "latest",
+						"last_updated_at": "@{activity('LookupMaxUpdatedAt').output.firstRow.latest_updated_at}"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://storage.azure.com/"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-07-21T02:13:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
