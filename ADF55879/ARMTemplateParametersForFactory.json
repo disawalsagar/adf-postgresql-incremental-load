@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADF55879"
+		},
+		"AzureDataLakeStorageGen2_accountKey": {
+			"value": ""
+		},
+		"AzurePostgreSql1_password": {
+			"value": ""
+		},
+		"AzureTableStorageLS_connectionString": {
+			"value": ""
+		},
+		"azureBlobStorageSourceContainer_connectionString": {
+			"value": ""
+		},
+		"population_connectionString": {
+			"value": ""
+		},
+		"AzureDataLakeStorageGen2_properties_typeProperties_url": {
+			"value": "https://bronze12456.dfs.core.windows.net/"
+		},
+		"AzurePostgreSql1_properties_typeProperties_server": {
+			"value": "dbpostgresql5698.postgres.database.azure.com"
+		},
+		"AzurePostgreSql1_properties_typeProperties_database": {
+			"value": "test12"
+		},
+		"AzurePostgreSql1_properties_typeProperties_username": {
+			"value": "disawalsagar"
+		},
+		"ecdc_ls_properties_typeProperties_url": {
+			"value": "https://github.com"
+		}
+	}
+}
