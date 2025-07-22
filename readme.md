@@ -1,3 +1,5 @@
+This project implements a serverless, incremental data ingestion pipeline using Azure Data Factory (ADF) to transfer data from Azure PostgreSQL Flexible Server to Azure Data Lake Storage Gen2 (ADLS Gen2) in a structured and cost-effective way.
+
 ## 📊 Data Flow Diagram - Incremental Load Pipeline
 
 ```mermaid
