@@ -1,0 +1,30 @@
+name: Deploy ADF to Azure
+
+on:
+  push:
+    branches:
+      - main  # or 'adf_publish' if using Git integration
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy ARM Template
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ fromJSON(secrets.AZURE_CREDENTIALS).subscriptionId }}
+          resourceGroupName: 22df
+          template: ./ARMTemplateForFactory.json
+          parameters: ./ARMTemplateParametersForFactory.json
+          scope: resourcegroup
+          region: eastus
+
