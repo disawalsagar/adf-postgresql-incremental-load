@@ -3,7 +3,7 @@ name: Deploy ADF to Azure
 on:
   push:
     branches:
-      - main  # or 'adf_publish' if using Git integration
+      - main
 
 jobs:
   deploy:
@@ -18,6 +18,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Debug template files
+        run: |
+          echo "Files in root:"
+          ls -l
+          echo "Files in .github/workflows:"
+          ls -l .github/workflows
+          echo "Template Preview:"
+          head -n 10 ARMTemplateForFactory.json
+          echo "Parameter Preview:"
+          head -n 10 ARMTemplateParametersForFactory.json
+
       - name: Deploy ARM Template
         uses: azure/arm-deploy@v1
         with:
@@ -27,4 +38,9 @@ jobs:
           parameters: ./ARMTemplateParametersForFactory.json
           scope: resourcegroup
           region: eastus
+
+
+
+
+
 
